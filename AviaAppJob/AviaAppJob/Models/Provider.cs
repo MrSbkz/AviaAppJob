@@ -15,4 +15,8 @@ public class Provider
     public string CityListEndpoint { get; set; }
 
     public string CountryListEndpoint { get; set; }
+
+    public string FlightEndpoint { get; set; }
+
+    public int AddFlightsCount { get; set; }
 }
