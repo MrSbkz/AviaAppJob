@@ -1,8 +1,10 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 using AviaAppJob.Models;
 using AviaAppJob.Services.Contracts;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace AviaAppJob.Services;
@@ -11,28 +13,52 @@ public class HttpClientService : IHttpClientService
 {
     private readonly HttpClient _httpClient;
     private readonly Provider _configuration;
+    private readonly ILogger<HttpClientService> _logger;
 
-    public HttpClientService(IConfiguration configuration)
+    public HttpClientService(IConfiguration configuration, ILogger<HttpClientService> logger)
     {
+        _logger = logger;
         _configuration = new Provider();
         configuration.GetSection("Provider").Bind(_configuration);
         _httpClient = new HttpClient();
     }
 
 
-    public async Task<string> PostAsync(string endpoint, object body, string token)
+    public async Task<string?> PostAsync(string endpoint, object body, string token)
     {
-        SetHttpClient(token);
-        var content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8, _configuration.ContentType);
-        var response = await _httpClient.PostAsync(_configuration.Endpoint + endpoint, content);
-        return await response.Content.ReadAsStringAsync();
+        try
+        {
+            SetHttpClient(token);
+            var content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8,
+                _configuration.ContentType);
+            var response = await _httpClient.PostAsync(_configuration.Endpoint + endpoint, content);
+            if (response.StatusCode != HttpStatusCode.OK)
+                _logger.LogWarning($"POST REQUEST: Failed response, endpoint {endpoint}, {response.Content}");
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning($"Exception: {e.Message}");
+            return null;
+        }
     }
 
-    public async Task<string> GetAsync(string endpoint, string token)
+    public async Task<string?> GetAsync(string endpoint, string token)
     {
-        SetHttpClient(token);
-        var response = await _httpClient.GetAsync(_configuration.Endpoint + endpoint);
-        return await response.Content.ReadAsStringAsync();
+        try
+        {
+            SetHttpClient(token);
+            var response = await _httpClient.GetAsync(_configuration.Endpoint + endpoint);
+            if (response.StatusCode != HttpStatusCode.OK)
+                _logger.LogWarning($"GET REQUEST: Failed response, endpoint {endpoint}, {response.Content}");
+            return await response.Content.ReadAsStringAsync();
+
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning($"Exception: {e.Message}");
+            return null;
+        }
     }
 
     private void SetHttpClient(string token)

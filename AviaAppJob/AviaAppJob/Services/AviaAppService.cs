@@ -16,6 +16,7 @@ public class AviaAppService : IAviaAppService
     public async Task StartAsync()
     {
         var token = await _authService.LoginAsync();
-        await _flightService.AddFlightsAsync(token);
+        if (!string.IsNullOrEmpty(token) && !string.IsNullOrWhiteSpace(token))
+            await _flightService.AddFlightsAsync(token);
     }
 }

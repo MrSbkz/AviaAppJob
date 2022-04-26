@@ -25,8 +25,12 @@ public class CountryService : ICountryService
 
     public async Task<IList<Country>> GetCountries(string token)
     {
-        _logger.LogInformation($"Getting countries");
+        _logger.LogInformation("Getting flights");
         var result = await _httpClientService.GetAsync(_configuration.CountryListEndpoint, token);
-        return JsonConvert.DeserializeObject<IList<Country>>(result)!;
+        if (string.IsNullOrEmpty(result) || string.IsNullOrWhiteSpace(result))
+            return new List<Country>();
+
+        var countries = JsonConvert.DeserializeObject<IList<Country>>(result)!;
+        return countries;
     }
 }

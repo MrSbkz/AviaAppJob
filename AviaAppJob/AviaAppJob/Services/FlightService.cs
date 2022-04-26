@@ -1,6 +1,7 @@
 ﻿using AviaAppJob.Models;
 using AviaAppJob.Services.Contracts;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace AviaAppJob.Services;
 
@@ -11,6 +12,7 @@ public class FlightService : IFlightService
     private readonly IAirportService _airportService;
     private readonly ICityService _cityService;
     private readonly ICountryService _countryService;
+    private readonly ILogger<FlightService> _logger;
     private readonly Random _rnd;
 
     public FlightService(
@@ -18,12 +20,14 @@ public class FlightService : IFlightService
         IHttpClientService httpClientService,
         IAirportService airportService,
         ICityService cityService,
-        ICountryService countryService)
+        ICountryService countryService,
+        ILogger<FlightService> logger)
     {
         _httpClientService = httpClientService;
         _airportService = airportService;
         _cityService = cityService;
         _countryService = countryService;
+        _logger = logger;
         _configuration = new Provider();
         configuration.GetSection("Provider").Bind(_configuration);
         _rnd = new Random();
@@ -32,35 +36,46 @@ public class FlightService : IFlightService
     public async Task AddFlightsAsync(string token)
     {
         var airports = await GetAllAirports(token);
-        var flightBodies = GetFlightBodies(airports);
-        foreach (var flightBody in flightBodies)
+        if (airports.Count >= 5)
         {
-            await _httpClientService.PostAsync(_configuration.FlightEndpoint, flightBody, token);
+            var flightBodies = GenerateFlights(airports);
+            foreach (var flightBody in flightBodies)
+            {
+                await _httpClientService.PostAsync(_configuration.FlightEndpoint, flightBody, token);
+            }
+        }
+        else
+        {
+            _logger.LogWarning($"Airports count less than 5. Count: {airports.Count}");
         }
     }
 
     private async Task<IList<Airport>> GetAllAirports(string token)
     {
         var countries = await _countryService.GetCountries(token);
+        _logger.LogInformation($"Got {countries.Count} countries");
         var cities = new List<City>();
         foreach (var country in countries)
         {
             cities.AddRange(await _cityService.GetCitiesAsync(country.Id, token));
         }
+        _logger.LogInformation($"Got {cities.Count} cities");
 
         var airports = new List<Airport>();
         foreach (var city in cities)
         {
             airports.AddRange(await _airportService.GetAirportsAsync(city.Id, token));
         }
+        _logger.LogInformation($"Got {airports.Count} airports");
 
         return airports;
     }
 
-    private IList<FlightBody> GetFlightBodies(IList<Airport> airports)
+    private IList<FlightBody> GenerateFlights(IList<Airport> airports)
     {
+        _logger.LogInformation("Generating flights");
         var flights = new List<FlightBody>();
-        for (int i = 0; i < _configuration.AddFlightsCount; i++)
+        for (var i = 0; i < _configuration.AddFlightsCount; i++)
         {
             var flightBody = SetAirportIds(airports);
             flightBody.Price = _rnd.Next(55, 120);
@@ -70,6 +85,8 @@ public class FlightService : IFlightService
             SetFlightTime(flightBody);
             flights.Add(flightBody);
         }
+
+        _logger.LogInformation($"Generated {flights.Count} flights");
 
         return flights;
     }
