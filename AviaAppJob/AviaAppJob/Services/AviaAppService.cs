@@ -17,6 +17,9 @@ public class AviaAppService : IAviaAppService
     {
         var token = await _authService.LoginAsync();
         if (!string.IsNullOrEmpty(token) && !string.IsNullOrWhiteSpace(token))
+        {
             await _flightService.AddFlightsAsync(token);
+            await _flightService.DeleteOutdatedFlightsAsync(token);
+        }
     }
 }

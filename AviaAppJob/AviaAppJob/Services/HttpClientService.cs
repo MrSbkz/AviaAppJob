@@ -43,6 +43,24 @@ public class HttpClientService : IHttpClientService
         }
     }
 
+
+    public async Task<string?> DeleteAsync(string endpoint, string token)
+    {
+        try
+        {
+            SetHttpClient(token);
+            var response = await _httpClient.DeleteAsync(_configuration.Endpoint + endpoint);
+            if (response.StatusCode != HttpStatusCode.OK)
+                _logger.LogWarning($"DELETE REQUEST: Failed response, endpoint {endpoint}, {response.Content}");
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning($"Exception: {e.Message}");
+            return null;
+        }
+    }
+
     public async Task<string?> GetAsync(string endpoint, string token)
     {
         try

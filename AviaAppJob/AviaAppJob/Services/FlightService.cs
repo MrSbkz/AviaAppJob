@@ -50,6 +50,12 @@ public class FlightService : IFlightService
         }
     }
 
+    public async Task DeleteOutdatedFlightsAsync(string token)
+    {
+        _logger.LogInformation("Deleting outdated flights");
+        await _httpClientService.DeleteAsync(_configuration.DeleteOutdatedFlightsEndpoint, token);
+    }
+
     private async Task<IList<Airport>> GetAllAirports(string token)
     {
         var countries = await _countryService.GetCountries(token);
