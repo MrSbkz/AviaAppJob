@@ -83,7 +83,7 @@ public class FlightService : IFlightService
         var flights = new List<FlightBody>();
         for (var i = 0; i < _configuration.AddFlightsCount; i++)
         {
-            var flightBody = SetAirportIds(airports);
+            var flightBody = GenerateFlightWithAirportIds(airports);
             flightBody.Price = _rnd.Next(55, 120);
 
             // Maybe it will be possible to get airplanes and flight duration from some third party service
@@ -97,7 +97,7 @@ public class FlightService : IFlightService
         return flights;
     }
 
-    private FlightBody SetAirportIds(IList<Airport> airports)
+    private FlightBody GenerateFlightWithAirportIds(IList<Airport> airports)
     {
         var flightBody = new FlightBody();
         var airportIndex = _rnd.Next(0, airports.Count);
@@ -121,7 +121,7 @@ public class FlightService : IFlightService
 
     private void SetFlightTime(FlightBody flightBody)
     {
-        var departureHour = _rnd.Next(0, 21);
+        var departureHour = _rnd.Next(0, 24);
         var departureMinutes = _rnd.Next(0, 6) * 10;
 
         var departureDate = DateTime.Now.Date;

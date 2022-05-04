@@ -4,7 +4,7 @@ public class Provider
 {
     public int TimeSpan { get; set; }
 
-    public string Endpoint { get; set; }
+    public string BaseUrl { get; set; }
 
     public string ContentType { get; set; }
 

@@ -31,7 +31,7 @@ public class HttpClientService : IHttpClientService
             SetHttpClient(token);
             var content = new StringContent(JsonConvert.SerializeObject(body), Encoding.UTF8,
                 _configuration.ContentType);
-            var response = await _httpClient.PostAsync(_configuration.Endpoint + endpoint, content);
+            var response = await _httpClient.PostAsync(_configuration.BaseUrl + endpoint, content);
             if (response.StatusCode != HttpStatusCode.OK)
                 _logger.LogWarning($"POST REQUEST: Failed response, endpoint {endpoint}, {response.Content}");
             return await response.Content.ReadAsStringAsync();
@@ -49,7 +49,7 @@ public class HttpClientService : IHttpClientService
         try
         {
             SetHttpClient(token);
-            var response = await _httpClient.DeleteAsync(_configuration.Endpoint + endpoint);
+            var response = await _httpClient.DeleteAsync(_configuration.BaseUrl + endpoint);
             if (response.StatusCode != HttpStatusCode.OK)
                 _logger.LogWarning($"DELETE REQUEST: Failed response, endpoint {endpoint}, {response.Content}");
             return await response.Content.ReadAsStringAsync();
@@ -66,7 +66,7 @@ public class HttpClientService : IHttpClientService
         try
         {
             SetHttpClient(token);
-            var response = await _httpClient.GetAsync(_configuration.Endpoint + endpoint);
+            var response = await _httpClient.GetAsync(_configuration.BaseUrl + endpoint);
             if (response.StatusCode != HttpStatusCode.OK)
                 _logger.LogWarning($"GET REQUEST: Failed response, endpoint {endpoint}, {response.Content}");
             return await response.Content.ReadAsStringAsync();
