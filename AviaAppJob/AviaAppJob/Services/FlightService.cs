@@ -96,7 +96,7 @@ public class FlightService : IFlightService
         var departureHour = _rnd.Next(3, 27);
         var departureMinutes = _rnd.Next(0, 6) * 10;
 
-        var departureDate = DateTime.Now.Date.AddDays(7);
+        var departureDate = DateTime.Now.Date.AddDays(_rnd.Next(1, 7));
         var departureTime = new TimeSpan(departureHour, departureMinutes, 0);
         departureDate += departureTime;
 
