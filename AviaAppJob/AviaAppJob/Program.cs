@@ -23,6 +23,7 @@ public static class Program
                 services.AddScoped<IAirportService, AirportService>();
                 services.AddScoped<ICityService, CityService>();
                 services.AddScoped<ICountryService, CountryService>();
+                services.AddScoped<IAirplaneService, AirplaneService>();
 
                 services.AddScoped<IHttpClientService, HttpClientService>();
             });

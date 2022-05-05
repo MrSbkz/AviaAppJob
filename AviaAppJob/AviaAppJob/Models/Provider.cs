@@ -16,9 +16,11 @@ public class Provider
 
     public string CountryListEndpoint { get; set; }
 
-    public string FlightEndpoint { get; set; }
-    
+    public string AddFlightsEndpoint { get; set; }
+
     public string DeleteOutdatedFlightsEndpoint { get; set; }
 
     public int AddFlightsCount { get; set; }
+
+    public int CountriesCountMinimum { get; set; }
 }

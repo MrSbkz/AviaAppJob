@@ -4,5 +4,5 @@ namespace AviaAppJob.Services.Contracts;
 
 public interface IAirportService
 {
-    Task<IList<Airport>> GetAirportsAsync(Guid cityId, string token);
+    Task<IList<Airport>> GetAirportsAsync(string token);
 }

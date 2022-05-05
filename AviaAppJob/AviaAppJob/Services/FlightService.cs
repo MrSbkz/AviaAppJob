@@ -10,8 +10,7 @@ public class FlightService : IFlightService
     private readonly Provider _configuration;
     private readonly IHttpClientService _httpClientService;
     private readonly IAirportService _airportService;
-    private readonly ICityService _cityService;
-    private readonly ICountryService _countryService;
+    private readonly IAirplaneService _airplaneService;
     private readonly ILogger<FlightService> _logger;
     private readonly Random _rnd;
 
@@ -19,14 +18,12 @@ public class FlightService : IFlightService
         IConfiguration configuration,
         IHttpClientService httpClientService,
         IAirportService airportService,
-        ICityService cityService,
-        ICountryService countryService,
+        IAirplaneService airplaneService,
         ILogger<FlightService> logger)
     {
         _httpClientService = httpClientService;
         _airportService = airportService;
-        _cityService = cityService;
-        _countryService = countryService;
+        _airplaneService = airplaneService;
         _logger = logger;
         _configuration = new Provider();
         configuration.GetSection("Provider").Bind(_configuration);
@@ -35,18 +32,16 @@ public class FlightService : IFlightService
 
     public async Task AddFlightsAsync(string token)
     {
-        var airports = await GetAllAirports(token);
-        if (airports.Count >= 5)
+        var airports = await _airportService.GetAirportsAsync(token);
+        var countriesCount = airports.GroupBy(x => x.City.CountryId).Select(x => x.First()).Count();
+        if (countriesCount >= _configuration.CountriesCountMinimum)
         {
             var flightBodies = GenerateFlights(airports);
-            foreach (var flightBody in flightBodies)
-            {
-                await _httpClientService.PostAsync(_configuration.FlightEndpoint, flightBody, token);
-            }
+            await _httpClientService.PostAsync(_configuration.AddFlightsEndpoint, flightBodies, token);
         }
         else
         {
-            _logger.LogWarning($"Airports count less than 5. Count: {airports.Count}");
+            _logger.LogWarning($"Countries count less than {_configuration.CountriesCountMinimum}. Count: {countriesCount}");
         }
     }
 
@@ -54,27 +49,6 @@ public class FlightService : IFlightService
     {
         _logger.LogInformation("Deleting outdated flights");
         await _httpClientService.DeleteAsync(_configuration.DeleteOutdatedFlightsEndpoint, token);
-    }
-
-    private async Task<IList<Airport>> GetAllAirports(string token)
-    {
-        var countries = await _countryService.GetCountries(token);
-        _logger.LogInformation($"Got {countries.Count} countries");
-        var cities = new List<City>();
-        foreach (var country in countries)
-        {
-            cities.AddRange(await _cityService.GetCitiesAsync(country.Id, token));
-        }
-        _logger.LogInformation($"Got {cities.Count} cities");
-
-        var airports = new List<Airport>();
-        foreach (var city in cities)
-        {
-            airports.AddRange(await _airportService.GetAirportsAsync(city.Id, token));
-        }
-        _logger.LogInformation($"Got {airports.Count} airports");
-
-        return airports;
     }
 
     private IList<FlightBody> GenerateFlights(IList<Airport> airports)
@@ -85,9 +59,7 @@ public class FlightService : IFlightService
         {
             var flightBody = GenerateFlightWithAirportIds(airports);
             flightBody.Price = _rnd.Next(55, 120);
-
-            // Maybe it will be possible to get airplanes and flight duration from some third party service
-            flightBody.Airplane = "Airbus";
+            flightBody.Airplane = _airplaneService.GetAirplaneName();
             SetFlightTime(flightBody);
             flights.Add(flightBody);
         }
@@ -121,14 +93,14 @@ public class FlightService : IFlightService
 
     private void SetFlightTime(FlightBody flightBody)
     {
-        var departureHour = _rnd.Next(0, 24);
+        var departureHour = _rnd.Next(3, 27);
         var departureMinutes = _rnd.Next(0, 6) * 10;
 
-        var departureDate = DateTime.Now.Date;
+        var departureDate = DateTime.Now.Date.AddDays(7);
         var departureTime = new TimeSpan(departureHour, departureMinutes, 0);
         departureDate += departureTime;
 
-        flightBody.DepartureDateTime = departureDate.AddDays(7);
+        flightBody.DepartureDateTime = departureDate;
         flightBody.ArrivalDateTime = flightBody.DepartureDateTime.AddHours(3);
     }
 }

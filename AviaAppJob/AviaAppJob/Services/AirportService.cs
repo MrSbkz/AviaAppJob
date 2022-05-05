@@ -23,10 +23,10 @@ public class AirportService : IAirportService
         configuration.GetSection("Provider").Bind(_configuration);
     }
 
-    public async Task<IList<Airport>> GetAirportsAsync(Guid cityId, string token)
+    public async Task<IList<Airport>> GetAirportsAsync(string token)
     {
-        _logger.LogInformation($"Getting airports of city with id \'{cityId}\'");
-        var result = await _httpClientService.GetAsync(_configuration.AirportListEndpoint + cityId, token);
+        _logger.LogInformation($"Getting airports");
+        var result = await _httpClientService.GetAsync(_configuration.AirportListEndpoint, token);
         if (string.IsNullOrEmpty(result) || string.IsNullOrWhiteSpace(result))
             return new List<Airport>();
 
